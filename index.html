@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdGuide Pro — Run Ads Like a Pro</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="container nav-inner">
+      <div class="logo">AdGuide <span>Pro</span></div>
+      <ul class="nav-links">
+        <li><a href="#how-it-works">How it Works</a></li>
+        <li><a href="#platforms">Platforms</a></li>
+        <li><a href="#strategy">Strategy</a></li>
+        <li><a href="#budget">Budget</a></li>
+        <li><a href="#visuals">Visuals</a></li>
+        <li><a href="#integrate" class="btn btn-sm">Get Started</a></li>
+      </ul>
+      <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#how-it-works">How it Works</a>
+      <a href="#platforms">Platforms</a>
+      <a href="#strategy">Strategy</a>
+      <a href="#budget">Budget</a>
+      <a href="#visuals">Visuals</a>
+      <a href="#integrate" class="btn btn-sm">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-badge">No experience needed</div>
+      <h1>Run Ads That <span class="highlight">Actually Work</span></h1>
+      <p class="hero-sub">You focus on your business. We guide you through every step — from choosing the right platform to setting your budget, building your strategy, and launching your first ad.</p>
+      <div class="hero-actions">
+        <a href="#how-it-works" class="btn btn-primary">Start the Guide</a>
+        <a href="#budget" class="btn btn-outline">Calculate My Budget</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span>3 Steps</span><p>to launch</p></div>
+        <div class="stat"><span>5 Platforms</span><p>covered</p></div>
+        <div class="stat"><span>$0</span><p>to get started</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2>How It Works</h2>
+        <p>Three simple steps from zero knowledge to running your first ad</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <h3>Choose Your Platform</h3>
+          <p>We help you pick the right ad platform based on your business type, audience, and goals — no guessing required.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <h3>Build Your Strategy</h3>
+          <p>Follow our proven frameworks for targeting, messaging, and creative — tailored to your industry and budget.</p>
+        </div>
+        <div class="step-arrow">→</div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <h3>Launch & Optimize</h3>
+          <p>Generate your ad visuals, integrate directly with ad platforms, and track what's working — all in one place.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORMS -->
+  <section class="section bg-light" id="platforms">
+    <div class="container">
+      <div class="section-header">
+        <h2>Which Platform Is Right for You?</h2>
+        <p>Different platforms reach different audiences. Here's what you need to know.</p>
+      </div>
+      <div class="platform-grid">
+        <div class="platform-card" data-platform="meta">
+          <div class="platform-icon meta-icon">f</div>
+          <h3>Meta Ads</h3>
+          <p class="platform-desc">Facebook &amp; Instagram — best for reaching a broad audience, lifestyle brands, and local businesses.</p>
+          <ul class="platform-pros">
+            <li>Huge audience (3B+ users)</li>
+            <li>Powerful interest targeting</li>
+            <li>Great for visual products</li>
+            <li>Works with any budget</li>
+          </ul>
+          <div class="platform-budget">Min. Budget: <strong>$5/day</strong></div>
+          <button class="btn btn-outline btn-full" onclick="showPlatformGuide('meta')">View Full Guide</button>
+        </div>
+        <div class="platform-card recommended" data-platform="google">
+          <div class="badge-rec">Most Popular</div>
+          <div class="platform-icon google-icon">G</div>
+          <h3>Google Ads</h3>
+          <p class="platform-desc">Search &amp; Display — ideal when people are actively searching for what you offer.</p>
+          <ul class="platform-pros">
+            <li>Capture high-intent buyers</li>
+            <li>Pay only per click</li>
+            <li>Works for any business</li>
+            <li>Measurable ROI</li>
+          </ul>
+          <div class="platform-budget">Min. Budget: <strong>$10/day</strong></div>
+          <button class="btn btn-primary btn-full" onclick="showPlatformGuide('google')">View Full Guide</button>
+        </div>
+        <div class="platform-card" data-platform="tiktok">
+          <div class="platform-icon tiktok-icon">T</div>
+          <h3>TikTok Ads</h3>
+          <p class="platform-desc">Short video ads — perfect for brands targeting younger audiences with creative content.</p>
+          <ul class="platform-pros">
+            <li>Massive Gen Z reach</li>
+            <li>High organic potential</li>
+            <li>Viral possibilities</li>
+            <li>Low cost per view</li>
+          </ul>
+          <div class="platform-budget">Min. Budget: <strong>$20/day</strong></div>
+          <button class="btn btn-outline btn-full" onclick="showPlatformGuide('tiktok')">View Full Guide</button>
+        </div>
+        <div class="platform-card" data-platform="linkedin">
+          <div class="platform-icon linkedin-icon">in</div>
+          <h3>LinkedIn Ads</h3>
+          <p class="platform-desc">Professional network — best for B2B businesses targeting companies and decision makers.</p>
+          <ul class="platform-pros">
+            <li>Reach business buyers</li>
+            <li>Job title targeting</li>
+            <li>High-quality leads</li>
+            <li>Trusted environment</li>
+          </ul>
+          <div class="platform-budget">Min. Budget: <strong>$15/day</strong></div>
+          <button class="btn btn-outline btn-full" onclick="showPlatformGuide('linkedin')">View Full Guide</button>
+        </div>
+        <div class="platform-card" data-platform="youtube">
+          <div class="platform-icon youtube-icon">&#9654;</div>
+          <h3>YouTube Ads</h3>
+          <p class="platform-desc">Video advertising — great for storytelling, brand awareness, and product demonstrations.</p>
+          <ul class="platform-pros">
+            <li>2nd largest search engine</li>
+            <li>Skippable = no waste</li>
+            <li>High engagement</li>
+            <li>Retargeting power</li>
+          </ul>
+          <div class="platform-budget">Min. Budget: <strong>$10/day</strong></div>
+          <button class="btn btn-outline btn-full" onclick="showPlatformGuide('youtube')">View Full Guide</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platform Guide Modal -->
+  <div class="modal-overlay" id="platformModal" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- STRATEGY -->
+  <section class="section" id="strategy">
+    <div class="container">
+      <div class="section-header">
+        <h2>Best Practices &amp; Strategy</h2>
+        <p>Proven frameworks used by top advertisers — explained simply</p>
+      </div>
+      <div class="strategy-grid">
+        <div class="strategy-card">
+          <div class="strategy-icon">🎯</div>
+          <h3>Define Your Audience</h3>
+          <p>Before spending a single dollar, know exactly who you're talking to. Age, interests, location, income level — the more specific, the better your ROI.</p>
+          <div class="tip"><strong>Pro Tip:</strong> Start with a "lookalike" audience based on your existing customers.</div>
+        </div>
+        <div class="strategy-card">
+          <div class="strategy-icon">✍️</div>
+          <h3>Write Compelling Copy</h3>
+          <p>Your ad text should speak directly to a pain point or desire. Use the formula: <strong>Problem → Solution → CTA</strong>. Keep it short and punchy.</p>
+          <div class="tip"><strong>Pro Tip:</strong> Lead with a question your customer is already asking themselves.</div>
+        </div>
+        <div class="strategy-card">
+          <div class="strategy-icon">🖼️</div>
+          <h3>Use Strong Visuals</h3>
+          <p>People scroll fast. Your image or video has less than 2 seconds to stop them. Use bold colors, faces, and minimal text on images.</p>
+          <div class="tip"><strong>Pro Tip:</strong> Video ads consistently outperform static images by 20–30%.</div>
+        </div>
+        <div class="strategy-card">
+          <div class="strategy-icon">🧪</div>
+          <h3>Always A/B Test</h3>
+          <p>Never run just one ad. Test 2–3 variations of your headline, image, or audience. Let the data tell you what works — then scale it.</p>
+          <div class="tip"><strong>Pro Tip:</strong> Change only ONE variable per test so you know what caused the difference.</div>
+        </div>
+        <div class="strategy-card">
+          <div class="strategy-icon">🔄</div>
+          <h3>Retargeting</h3>
+          <p>Most people don't buy on the first visit. Retargeting shows ads to people who've already visited your site — these convert 10x better.</p>
+          <div class="tip"><strong>Pro Tip:</strong> Install your pixel/tag on your website before you start spending money on ads.</div>
+        </div>
+        <div class="strategy-card">
+          <div class="strategy-icon">📊</div>
+          <h3>Track &amp; Optimize</h3>
+          <p>Check your campaigns every 3–7 days. Kill what's not working. Double down on winners. Small tweaks compound into big results over time.</p>
+          <div class="tip"><strong>Pro Tip:</strong> Focus on Cost Per Result (CPR), not just clicks or impressions.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUDGET CALCULATOR -->
+  <section class="section bg-dark" id="budget">
+    <div class="container">
+      <div class="section-header light">
+        <h2>Budget Calculator</h2>
+        <p>Find out how much to spend — and what results to expect</p>
+      </div>
+      <div class="calculator">
+        <div class="calc-inputs">
+          <div class="calc-group">
+            <label>What's your monthly revenue?</label>
+            <select id="revenue">
+              <option value="5000">Under $5,000</option>
+              <option value="15000">$5,000 – $20,000</option>
+              <option value="50000" selected>$20,000 – $100,000</option>
+              <option value="200000">$100,000 – $500,000</option>
+              <option value="500000">$500,000+</option>
+            </select>
+          </div>
+          <div class="calc-group">
+            <label>What's your goal?</label>
+            <select id="goal">
+              <option value="awareness">Brand Awareness</option>
+              <option value="leads" selected>Generate Leads</option>
+              <option value="sales">Drive Sales</option>
+              <option value="traffic">Website Traffic</option>
+            </select>
+          </div>
+          <div class="calc-group">
+            <label>How competitive is your industry?</label>
+            <select id="competition">
+              <option value="low">Low (local, niche)</option>
+              <option value="medium" selected>Medium (regional)</option>
+              <option value="high">High (national/e-commerce)</option>
+            </select>
+          </div>
+          <div class="calc-group">
+            <label>Which platform?</label>
+            <select id="calcPlatform">
+              <option value="meta">Meta (Facebook/Instagram)</option>
+              <option value="google" selected>Google Ads</option>
+              <option value="tiktok">TikTok</option>
+              <option value="linkedin">LinkedIn</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="calculateBudget()">Calculate My Budget</button>
+        </div>
+        <div class="calc-results" id="calcResults">
+          <div class="result-placeholder">
+            <div class="placeholder-icon">💰</div>
+            <p>Fill in the form and click Calculate to see your personalized budget recommendation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISUAL GENERATOR -->
+  <section class="section" id="visuals">
+    <div class="container">
+      <div class="section-header">
+        <h2>Ad Visual Generator</h2>
+        <p>Describe your business and we'll generate ad creative ideas and copy for you</p>
+      </div>
+      <div class="generator">
+        <div class="gen-inputs">
+          <div class="gen-group">
+            <label>What does your business do?</label>
+            <input type="text" id="bizDesc" placeholder="e.g. I sell handmade jewelry online" />
+          </div>
+          <div class="gen-group">
+            <label>Who is your target customer?</label>
+            <input type="text" id="targetCustomer" placeholder="e.g. Women aged 25–45 who love fashion" />
+          </div>
+          <div class="gen-group">
+            <label>What's your main offer or promotion?</label>
+            <input type="text" id="offer" placeholder="e.g. 20% off first order, free shipping" />
+          </div>
+          <div class="gen-group">
+            <label>Ad format</label>
+            <select id="adFormat">
+              <option value="social">Social Media Post</option>
+              <option value="search">Search Ad (text)</option>
+              <option value="video">Video Ad Script</option>
+              <option value="banner">Display Banner</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="generateAd()">Generate Ad Ideas</button>
+        </div>
+        <div class="gen-output" id="genOutput">
+          <div class="result-placeholder">
+            <div class="placeholder-icon">✨</div>
+            <p>Your AI-generated ad copy and creative brief will appear here.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTEGRATE -->
+  <section class="section bg-gradient" id="integrate">
+    <div class="container">
+      <div class="integrate-inner">
+        <h2>Ready to Launch Your Ads?</h2>
+        <p>Connect your ad accounts and start running campaigns directly from one dashboard. No switching between platforms.</p>
+        <div class="integrate-platforms">
+          <div class="int-platform">
+            <div class="int-icon meta-icon">f</div>
+            <span>Meta Ads</span>
+            <span class="int-status available">Connect</span>
+          </div>
+          <div class="int-platform">
+            <div class="int-icon google-icon">G</div>
+            <span>Google Ads</span>
+            <span class="int-status available">Connect</span>
+          </div>
+          <div class="int-platform">
+            <div class="int-icon tiktok-icon">T</div>
+            <span>TikTok Ads</span>
+            <span class="int-status available">Connect</span>
+          </div>
+          <div class="int-platform">
+            <div class="int-icon linkedin-icon">in</div>
+            <span>LinkedIn</span>
+            <span class="int-status coming">Coming Soon</span>
+          </div>
+        </div>
+        <div class="integrate-form">
+          <input type="email" id="emailInput" placeholder="Enter your email to get early access" />
+          <button class="btn btn-primary" onclick="submitEmail()">Get Early Access</button>
+        </div>
+        <p id="emailMsg" class="email-msg"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="logo">AdGuide <span>Pro</span></div>
+      <p>Helping business owners run smarter ads.</p>
+      <div class="footer-links">
+        <a href="#how-it-works">How it Works</a>
+        <a href="#platforms">Platforms</a>
+        <a href="#strategy">Strategy</a>
+        <a href="#budget">Budget</a>
+        <a href="#visuals">Visuals</a>
+      </div>
+      <p class="footer-copy">&copy; 2026 AdGuide Pro. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
