@@ -143,6 +143,37 @@
             </div>
           </div>
 
+          <div class="calc-field">
+            <label>Content Type <span class="label-hint">(affects reach &amp; engagement)</span></label>
+            <div class="content-type-grid" id="contentTypePills">
+              <button class="content-pill active" data-val="static" onclick="selectContent(this)">
+                <span class="ct-icon">🖼️</span>
+                <span class="ct-name">Static Post</span>
+                <span class="ct-hint">Simple & consistent</span>
+              </button>
+              <button class="content-pill" data-val="carousel" onclick="selectContent(this)">
+                <span class="ct-icon">🎴</span>
+                <span class="ct-name">Carousel</span>
+                <span class="ct-hint">+25% higher CTR</span>
+              </button>
+              <button class="content-pill" data-val="reels" onclick="selectContent(this)">
+                <span class="ct-icon">🎬</span>
+                <span class="ct-name">Reels / Short Video</span>
+                <span class="ct-hint">Best reach, low CPM</span>
+              </button>
+              <button class="content-pill" data-val="story" onclick="selectContent(this)">
+                <span class="ct-icon">⬜</span>
+                <span class="ct-name">Story</span>
+                <span class="ct-hint">Cheapest impressions</span>
+              </button>
+              <button class="content-pill" data-val="video" onclick="selectContent(this)">
+                <span class="ct-icon">🎥</span>
+                <span class="ct-name">Video Ad</span>
+                <span class="ct-hint">Highest conversions</span>
+              </button>
+            </div>
+          </div>
+
           <button class="btn btn-primary btn-full calc-btn" onclick="calculateBudget()">Generate My Projection</button>
         </div>
 

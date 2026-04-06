@@ -195,6 +195,23 @@ function selectGoal(el) {
   selectedGoal = el.dataset.val;
 }
 
+// Content type selector
+let selectedContent = 'static';
+function selectContent(el) {
+  document.querySelectorAll('#contentTypePills .content-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  selectedContent = el.dataset.val;
+}
+
+// Content type performance multipliers: { cpmMult, ctrMult, cvrMult, label, tip }
+const contentData = {
+  static:   { cpmMult: 1.00, ctrMult: 1.00, cvrMult: 1.00, label: 'Static Post',       tip: 'Consistent performer — great for retargeting and brand consistency.' },
+  carousel: { cpmMult: 1.05, ctrMult: 1.25, cvrMult: 1.20, label: 'Carousel',           tip: 'Carousels drive 25% more clicks — ideal for showcasing multiple products or steps.' },
+  reels:    { cpmMult: 0.75, ctrMult: 1.40, cvrMult: 1.15, label: 'Reels / Short Video', tip: 'Reels get the widest organic boost. Lower CPM means more people see your ad for less.' },
+  story:    { cpmMult: 0.65, ctrMult: 0.85, cvrMult: 0.90, label: 'Story',              tip: 'Stories are the cheapest format for impressions — best for awareness campaigns.' },
+  video:    { cpmMult: 0.90, ctrMult: 1.15, cvrMult: 1.25, label: 'Video Ad',           tip: 'Video builds trust fastest. Higher production cost pays off with the best conversion rates.' },
+};
+
 // Platform benchmarks (per month, industry-neutral baseline)
 const platformData = {
   meta:     { name: 'Meta',     icon: 'f',  cls: 'meta-icon',     cpm: 8,   cpc: 0.80, cvr: 0.025, color: '#1877f2' },
@@ -250,6 +267,7 @@ function calculateBudget() {
   const totalBudget = budgetInput * duration;
   const indMult     = industryMult[industry] || 1.0;
   const audMult     = audienceMult[audience] || 1.0;
+  const ct          = contentData[selectedContent] || contentData.static;
 
   // Normalize splits to only selected platforms
   const rawSplit = goalSplit[goal];
@@ -262,12 +280,12 @@ function calculateBudget() {
     const pd = platformData[p];
     const share = (rawSplit[p] || (1 / checked.length)) / splitSum;
     const monthBudget = budgetInput * share;
-    const adjCPM = pd.cpm * audMult;
-    const adjCPC = pd.cpc * indMult;
+    const adjCPM = pd.cpm * audMult * ct.cpmMult;
+    const adjCPC = pd.cpc * indMult / ct.ctrMult;
 
     const impressions = Math.round((monthBudget / adjCPM) * 1000);
     const clicks      = Math.round(monthBudget / adjCPC);
-    const conversions = Math.round(clicks * pd.cvr);
+    const conversions = Math.round(clicks * pd.cvr * ct.cvrMult);
     const cpa         = conversions > 0 ? (monthBudget / conversions).toFixed(0) : '—';
 
     totalImpressions += impressions * duration;
@@ -326,6 +344,9 @@ function calculateBudget() {
 
       <div class="proj-tip">
         <strong>Top Pick:</strong> Based on your goal (<em>${goal}</em>), <strong>${topPlatform.pd.name}</strong> is projected to deliver the most results. Consider allocating more budget there as you scale.
+      </div>
+      <div class="proj-tip content-tip">
+        <strong>Content: ${ct.label}</strong> — ${ct.tip}
       </div>
 
       <div class="proj-footer">
