@@ -51,6 +51,113 @@
     </div>
   </section>
 
+  <!-- BUDGET CALCULATOR (moved below hero) -->
+  <section class="section calc-section" id="budget">
+    <div class="container">
+      <div class="section-header">
+        <h2>Ad Budget Predictor</h2>
+        <p>Enter your budget, pick your platforms &amp; goal — get a full projection of what to expect</p>
+      </div>
+      <div class="calc-wrap">
+
+        <!-- INPUTS -->
+        <div class="calc-panel inputs-panel">
+
+          <div class="calc-row two-col">
+            <div class="calc-field">
+              <label>Your Monthly Ad Budget</label>
+              <div class="input-prefix">
+                <span>$</span>
+                <input type="number" id="budgetInput" placeholder="e.g. 1000" min="50" />
+              </div>
+            </div>
+            <div class="calc-field">
+              <label>Campaign Duration</label>
+              <select id="duration">
+                <option value="1">1 Month</option>
+                <option value="3" selected>3 Months</option>
+                <option value="6">6 Months</option>
+                <option value="12">12 Months</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="calc-row two-col">
+            <div class="calc-field">
+              <label>Your Industry</label>
+              <select id="industry">
+                <option value="ecommerce">Retail / E-commerce</option>
+                <option value="food">Restaurant / Food</option>
+                <option value="realestate">Real Estate</option>
+                <option value="health">Health &amp; Wellness</option>
+                <option value="services" selected>Professional Services</option>
+                <option value="saas">Technology / SaaS</option>
+                <option value="education">Education</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="calc-field">
+              <label>Audience Size</label>
+              <select id="audienceSize">
+                <option value="local">Local (city / neighbourhood)</option>
+                <option value="regional" selected>Regional (state / country)</option>
+                <option value="national">National / International</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="calc-field">
+            <label>Campaign Goal</label>
+            <div class="goal-pills" id="goalPills">
+              <button class="pill" data-val="awareness" onclick="selectGoal(this)">Brand Awareness</button>
+              <button class="pill active" data-val="leads" onclick="selectGoal(this)">Generate Leads</button>
+              <button class="pill" data-val="sales" onclick="selectGoal(this)">Drive Sales</button>
+              <button class="pill" data-val="traffic" onclick="selectGoal(this)">Website Traffic</button>
+              <button class="pill" data-val="app" onclick="selectGoal(this)">App Downloads</button>
+            </div>
+          </div>
+
+          <div class="calc-field">
+            <label>Select Platforms <span class="label-hint">(choose one or more)</span></label>
+            <div class="platform-checks">
+              <label class="pcheck">
+                <input type="checkbox" value="meta" checked />
+                <span class="pcheck-box"><span class="pcheck-icon meta-icon">f</span> Meta</span>
+              </label>
+              <label class="pcheck">
+                <input type="checkbox" value="google" checked />
+                <span class="pcheck-box"><span class="pcheck-icon google-icon">G</span> Google</span>
+              </label>
+              <label class="pcheck">
+                <input type="checkbox" value="tiktok" />
+                <span class="pcheck-box"><span class="pcheck-icon tiktok-icon">T</span> TikTok</span>
+              </label>
+              <label class="pcheck">
+                <input type="checkbox" value="linkedin" />
+                <span class="pcheck-box"><span class="pcheck-icon linkedin-icon">in</span> LinkedIn</span>
+              </label>
+              <label class="pcheck">
+                <input type="checkbox" value="youtube" />
+                <span class="pcheck-box"><span class="pcheck-icon youtube-icon">&#9654;</span> YouTube</span>
+              </label>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-full calc-btn" onclick="calculateBudget()">Generate My Projection</button>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="calc-panel results-panel" id="calcResults">
+          <div class="result-placeholder">
+            <div class="placeholder-icon">📊</div>
+            <p>Fill in the form and click <strong>Generate My Projection</strong> to see a full breakdown.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- HOW IT WORKS -->
   <section class="section" id="how-it-works">
     <div class="container">
@@ -209,63 +316,6 @@
           <h3>Track &amp; Optimize</h3>
           <p>Check your campaigns every 3–7 days. Kill what's not working. Double down on winners. Small tweaks compound into big results over time.</p>
           <div class="tip"><strong>Pro Tip:</strong> Focus on Cost Per Result (CPR), not just clicks or impressions.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- BUDGET CALCULATOR -->
-  <section class="section bg-dark" id="budget">
-    <div class="container">
-      <div class="section-header light">
-        <h2>Budget Calculator</h2>
-        <p>Find out how much to spend — and what results to expect</p>
-      </div>
-      <div class="calculator">
-        <div class="calc-inputs">
-          <div class="calc-group">
-            <label>What's your monthly revenue?</label>
-            <select id="revenue">
-              <option value="5000">Under $5,000</option>
-              <option value="15000">$5,000 – $20,000</option>
-              <option value="50000" selected>$20,000 – $100,000</option>
-              <option value="200000">$100,000 – $500,000</option>
-              <option value="500000">$500,000+</option>
-            </select>
-          </div>
-          <div class="calc-group">
-            <label>What's your goal?</label>
-            <select id="goal">
-              <option value="awareness">Brand Awareness</option>
-              <option value="leads" selected>Generate Leads</option>
-              <option value="sales">Drive Sales</option>
-              <option value="traffic">Website Traffic</option>
-            </select>
-          </div>
-          <div class="calc-group">
-            <label>How competitive is your industry?</label>
-            <select id="competition">
-              <option value="low">Low (local, niche)</option>
-              <option value="medium" selected>Medium (regional)</option>
-              <option value="high">High (national/e-commerce)</option>
-            </select>
-          </div>
-          <div class="calc-group">
-            <label>Which platform?</label>
-            <select id="calcPlatform">
-              <option value="meta">Meta (Facebook/Instagram)</option>
-              <option value="google" selected>Google Ads</option>
-              <option value="tiktok">TikTok</option>
-              <option value="linkedin">LinkedIn</option>
-            </select>
-          </div>
-          <button class="btn btn-primary btn-full" onclick="calculateBudget()">Calculate My Budget</button>
-        </div>
-        <div class="calc-results" id="calcResults">
-          <div class="result-placeholder">
-            <div class="placeholder-icon">💰</div>
-            <p>Fill in the form and click Calculate to see your personalized budget recommendation.</p>
-          </div>
         </div>
       </div>
     </div>

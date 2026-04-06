@@ -186,66 +186,160 @@ document.addEventListener('keydown', e => {
 });
 
 // === BUDGET CALCULATOR ===
+
+// Goal pill selector
+let selectedGoal = 'leads';
+function selectGoal(el) {
+  document.querySelectorAll('#goalPills .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  selectedGoal = el.dataset.val;
+}
+
+// Platform benchmarks (per month, industry-neutral baseline)
+const platformData = {
+  meta:     { name: 'Meta',     icon: 'f',  cls: 'meta-icon',     cpm: 8,   cpc: 0.80, cvr: 0.025, color: '#1877f2' },
+  google:   { name: 'Google',   icon: 'G',  cls: 'google-icon',   cpm: 5,   cpc: 2.50, cvr: 0.040, color: '#ea4335' },
+  tiktok:   { name: 'TikTok',   icon: 'T',  cls: 'tiktok-icon',   cpm: 6,   cpc: 0.50, cvr: 0.018, color: '#000000' },
+  linkedin: { name: 'LinkedIn', icon: 'in', cls: 'linkedin-icon', cpm: 30,  cpc: 5.50, cvr: 0.030, color: '#0a66c2' },
+  youtube:  { name: 'YouTube',  icon: '▶',  cls: 'youtube-icon',  cpm: 10,  cpc: 0.40, cvr: 0.015, color: '#ff0000' },
+};
+
+// Industry CPC multipliers
+const industryMult = {
+  ecommerce: 0.9, food: 0.7, realestate: 1.5,
+  health: 1.2, services: 1.3, saas: 1.6, education: 1.1, other: 1.0
+};
+
+// Audience size CPM multipliers
+const audienceMult = { local: 0.7, regional: 1.0, national: 1.3 };
+
+// Recommended budget split per goal (must sum to 1 across all 5 platforms)
+const goalSplit = {
+  awareness: { meta: 0.35, google: 0.10, tiktok: 0.25, linkedin: 0.05, youtube: 0.25 },
+  leads:     { meta: 0.30, google: 0.40, tiktok: 0.05, linkedin: 0.20, youtube: 0.05 },
+  sales:     { meta: 0.40, google: 0.35, tiktok: 0.15, linkedin: 0.05, youtube: 0.05 },
+  traffic:   { meta: 0.30, google: 0.50, tiktok: 0.15, linkedin: 0.00, youtube: 0.05 },
+  app:       { meta: 0.45, google: 0.15, tiktok: 0.35, linkedin: 0.00, youtube: 0.05 },
+};
+
+const goalLabel = { awareness: 'Impressions', leads: 'Leads', sales: 'Sales', traffic: 'Clicks', app: 'Installs' };
+
 function calculateBudget() {
-  const revenue = parseInt(document.getElementById('revenue').value);
-  const goal = document.getElementById('goal').value;
-  const competition = document.getElementById('competition').value;
-  const platform = document.getElementById('calcPlatform').value;
+  const budgetInput = parseFloat(document.getElementById('budgetInput').value);
+  if (!budgetInput || budgetInput < 50) {
+    document.getElementById('calcResults').innerHTML = `
+      <div class="result-placeholder"><div class="placeholder-icon">⚠️</div>
+      <p>Please enter a monthly budget of at least $50.</p></div>`;
+    return;
+  }
 
-  // Base: 5–15% of revenue for ads
-  let pct = 0.07;
-  if (goal === 'sales') pct = 0.10;
-  if (goal === 'awareness') pct = 0.05;
-  if (goal === 'leads') pct = 0.08;
-  if (goal === 'traffic') pct = 0.05;
+  const duration   = parseInt(document.getElementById('duration').value);
+  const industry   = document.getElementById('industry').value;
+  const audience   = document.getElementById('audienceSize').value;
+  const goal       = selectedGoal;
 
-  if (competition === 'high') pct += 0.03;
-  if (competition === 'low') pct -= 0.02;
+  // Which platforms are checked
+  const checked = [...document.querySelectorAll('.platform-checks input:checked')].map(c => c.value);
+  if (checked.length === 0) {
+    document.getElementById('calcResults').innerHTML = `
+      <div class="result-placeholder"><div class="placeholder-icon">⚠️</div>
+      <p>Please select at least one platform.</p></div>`;
+    return;
+  }
 
-  const monthlyBudget = Math.round(revenue * pct / 10) * 10;
-  const dailyBudget = Math.round(monthlyBudget / 30);
+  const totalBudget = budgetInput * duration;
+  const indMult     = industryMult[industry] || 1.0;
+  const audMult     = audienceMult[audience] || 1.0;
 
-  // Estimated results based on platform
-  const cpcMap = { meta: 0.80, google: 2.50, tiktok: 0.50, linkedin: 5.00 };
-  const cvrMap = { meta: 0.025, google: 0.04, tiktok: 0.02, linkedin: 0.03 };
-  const cpc = cpcMap[platform] || 1.5;
-  const cvr = cvrMap[platform] || 0.025;
+  // Normalize splits to only selected platforms
+  const rawSplit = goalSplit[goal];
+  let splitSum = checked.reduce((s, p) => s + (rawSplit[p] || 0), 0);
+  if (splitSum === 0) splitSum = 1;
 
-  const clicks = Math.round(monthlyBudget / cpc);
-  const conversions = Math.round(clicks * cvr);
-  const cpa = conversions > 0 ? (monthlyBudget / conversions).toFixed(0) : 'N/A';
+  // Build per-platform projections
+  let totalImpressions = 0, totalClicks = 0, totalConversions = 0;
+  const platformRows = checked.map(p => {
+    const pd = platformData[p];
+    const share = (rawSplit[p] || (1 / checked.length)) / splitSum;
+    const monthBudget = budgetInput * share;
+    const adjCPM = pd.cpm * audMult;
+    const adjCPC = pd.cpc * indMult;
 
-  const goalLabel = { awareness: 'Impressions', leads: 'Leads', sales: 'Sales', traffic: 'Clicks' };
+    const impressions = Math.round((monthBudget / adjCPM) * 1000);
+    const clicks      = Math.round(monthBudget / adjCPC);
+    const conversions = Math.round(clicks * pd.cvr);
+    const cpa         = conversions > 0 ? (monthBudget / conversions).toFixed(0) : '—';
 
+    totalImpressions += impressions * duration;
+    totalClicks      += clicks * duration;
+    totalConversions += conversions * duration;
+
+    return { p, pd, share, monthBudget, impressions, clicks, conversions, cpa };
+  });
+
+  const overallCPA = totalConversions > 0 ? Math.round(totalBudget / totalConversions) : '—';
+  const topPlatform = platformRows.reduce((a, b) => b.conversions > a.conversions ? b : a);
+
+  // Render
   document.getElementById('calcResults').innerHTML = `
-    <div class="result-data">
-      <h3>Your Recommended Budget</h3>
-      <div class="result-item">
-        <span class="result-label">Monthly Ad Budget</span>
-        <span class="result-value highlight-val">$${monthlyBudget.toLocaleString()}</span>
+    <div class="proj-results">
+
+      <div class="proj-summary">
+        <div class="proj-summary-item">
+          <span class="proj-big">${fmt(totalImpressions)}</span>
+          <span class="proj-lbl">Total Impressions</span>
+        </div>
+        <div class="proj-summary-item">
+          <span class="proj-big">${fmt(totalClicks)}</span>
+          <span class="proj-lbl">Total Clicks</span>
+        </div>
+        <div class="proj-summary-item accent">
+          <span class="proj-big">${fmt(totalConversions)}</span>
+          <span class="proj-lbl">Est. ${goalLabel[goal]}</span>
+        </div>
+        <div class="proj-summary-item">
+          <span class="proj-big">$${overallCPA}</span>
+          <span class="proj-lbl">Avg. Cost Per Result</span>
+        </div>
       </div>
-      <div class="result-item">
-        <span class="result-label">Daily Budget</span>
-        <span class="result-value">$${dailyBudget}/day</span>
+
+      <div class="proj-platform-list">
+        ${platformRows.map(r => `
+          <div class="proj-platform-row">
+            <div class="proj-plat-head">
+              <span class="pcheck-icon ${r.pd.cls}" style="width:32px;height:32px;font-size:0.85rem;border-radius:8px;">${r.pd.icon}</span>
+              <strong>${r.pd.name}</strong>
+              <span class="proj-share">${Math.round(r.share * 100)}% — $${Math.round(r.monthBudget)}/mo</span>
+            </div>
+            <div class="proj-plat-stats">
+              <span><em>${fmt(r.impressions)}</em> impressions</span>
+              <span><em>${fmt(r.clicks)}</em> clicks</span>
+              <span><em>${r.conversions}</em> ${goalLabel[goal].toLowerCase()}</span>
+              <span><em>$${r.cpa}</em> per result</span>
+            </div>
+            <div class="proj-bar-wrap">
+              <div class="proj-bar" style="width:${Math.round(r.share * 100)}%; background:${r.pd.color};"></div>
+            </div>
+          </div>
+        `).join('')}
       </div>
-      <div class="result-item">
-        <span class="result-label">Estimated Clicks/Month</span>
-        <span class="result-value">${clicks.toLocaleString()}</span>
+
+      <div class="proj-tip">
+        <strong>Top Pick:</strong> Based on your goal (<em>${goal}</em>), <strong>${topPlatform.pd.name}</strong> is projected to deliver the most results. Consider allocating more budget there as you scale.
       </div>
-      <div class="result-item">
-        <span class="result-label">Est. ${goalLabel[goal]}/Month</span>
-        <span class="result-value">${conversions.toLocaleString()}</span>
-      </div>
-      <div class="result-item">
-        <span class="result-label">Est. Cost Per Result</span>
-        <span class="result-value">$${cpa}</span>
-      </div>
-      <div class="result-item">
-        <span class="result-label">% of Revenue</span>
-        <span class="result-value">${(pct * 100).toFixed(0)}%</span>
+
+      <div class="proj-footer">
+        Over <strong>${duration} month${duration > 1 ? 's' : ''}</strong> — Total spend: <strong>$${totalBudget.toLocaleString()}</strong>
+        &nbsp;|&nbsp; Est. total ${goalLabel[goal].toLowerCase()}: <strong>${fmt(totalConversions)}</strong>
       </div>
     </div>
   `;
+}
+
+function fmt(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+  return n.toLocaleString();
 }
 
 // === AD VISUAL GENERATOR ===
