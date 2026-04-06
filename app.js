@@ -363,6 +363,195 @@ function fmt(n) {
   return n.toLocaleString();
 }
 
+// === PERFORMANCE MARKETER ===
+
+let perfFormatVal   = 'static';
+let perfPlatformVal = 'meta';
+
+function selectPerfPill(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  if (groupId === 'perfFormat')   perfFormatVal   = el.dataset.val;
+  if (groupId === 'perfPlatform') perfPlatformVal = el.dataset.val;
+}
+
+function handleUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const placeholder = document.getElementById('uploadPlaceholder');
+  const preview     = document.getElementById('uploadPreview');
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      preview.src = ev.target.result;
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    placeholder.innerHTML = `<div class="upload-icon">🎬</div><p class="upload-text">${file.name}</p><p class="upload-hint">Video ready for analysis</p>`;
+  }
+}
+
+// Drag-and-drop
+document.addEventListener('DOMContentLoaded', () => {
+  const zone = document.getElementById('uploadZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById('fileInput').files = dt.files;
+      handleUpload({ target: { files: [file] } });
+    }
+  });
+});
+
+function analyzePerformance() {
+  const budget   = parseFloat(document.getElementById('perfBudget').value) || 0;
+  const goal     = document.getElementById('perfGoal').value;
+  const copy     = document.getElementById('perfCopy').value.trim();
+  const audience = document.getElementById('perfAudience').value.trim();
+  const platform = perfPlatformVal;
+  const format   = perfFormatVal;
+  const hasVisual = document.getElementById('uploadPreview').style.display === 'block' ||
+                    document.getElementById('uploadPlaceholder').querySelector('.upload-text')?.textContent !== 'Drop your image or video here';
+
+  if (budget < 50) {
+    showPerfError('Please enter a monthly budget of at least $50.');
+    return;
+  }
+
+  // Score components (0–100 each)
+  const budgetScore  = Math.min(100, (budget / 2000) * 100);
+  const copyScore    = copy.length > 20 ? Math.min(100, 50 + copy.length) : 30;
+  const audScore     = audience.length > 10 ? 80 : 40;
+  const visualScore  = hasVisual ? 90 : 55;
+
+  const formatBonus  = { static: 0, carousel: 10, reels: 15, story: 5 };
+  const platformConf = { meta: 85, google: 80, tiktok: 75, linkedin: 70, youtube: 72 };
+
+  const rawScore = (budgetScore * 0.25) + (copyScore * 0.2) + (audScore * 0.15) +
+                   (visualScore * 0.2) + (platformConf[platform] * 0.2) + (formatBonus[format] || 0);
+  const score = Math.min(99, Math.round(rawScore));
+
+  // Projected metrics
+  const pd  = platformData[platform];
+  const ct  = contentData[format] || contentData.static;
+  const adjCPC = pd.cpc * (1 / ct.ctrMult);
+  const clicks = Math.round(budget / adjCPC);
+  const impressions = Math.round((budget / (pd.cpm * ct.cpmMult)) * 1000);
+  const convRate = pd.cvr * ct.cvrMult;
+  const conversions = Math.round(clicks * convRate);
+  const cpa = conversions > 0 ? (budget / conversions).toFixed(0) : '—';
+  const ctr = ((clicks / impressions) * 100).toFixed(2);
+
+  const grade = score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 55 ? 'C' : 'D';
+  const gradeColor = { A: '#10b981', B: '#a855f7', C: '#f59e0b', D: '#ef4444' };
+  const gradeMsg = { A: 'Excellent setup', B: 'Good — room to grow', C: 'Needs improvement', D: 'Major gaps to fix' };
+
+  // Guidance
+  const tips = buildGuidance({ budget, copy, audience, hasVisual, format, platform, goal, score });
+
+  document.getElementById('perfResults').innerHTML = `
+    <div class="perf-output">
+
+      <!-- Score ring -->
+      <div class="score-header">
+        <div class="score-ring" style="--score:${score};--clr:${gradeColor[grade]}">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#e9e4ff" stroke-width="8"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="${gradeColor[grade]}" stroke-width="8"
+              stroke-dasharray="${(score / 100) * 264} 264"
+              stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dasharray 1s ease"/>
+          </svg>
+          <div class="score-inner">
+            <span class="score-num" style="color:${gradeColor[grade]}">${score}</span>
+            <span class="score-label">/ 100</span>
+          </div>
+        </div>
+        <div class="score-meta">
+          <div class="score-grade" style="color:${gradeColor[grade]}">Grade ${grade}</div>
+          <div class="score-msg">${gradeMsg[grade]}</div>
+          <div class="score-tags">
+            <span class="stag">${platform.charAt(0).toUpperCase()+platform.slice(1)}</span>
+            <span class="stag">${format.charAt(0).toUpperCase()+format.slice(1)}</span>
+            <span class="stag">$${budget}/mo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="perf-metrics">
+        <div class="pmet"><span>${fmt(impressions)}</span><em>Impressions/mo</em></div>
+        <div class="pmet"><span>${fmt(clicks)}</span><em>Clicks/mo</em></div>
+        <div class="pmet accent"><span>${fmt(conversions)}</span><em>${goalLabel[goal]}/mo</em></div>
+        <div class="pmet"><span>$${cpa}</span><em>Cost Per Result</em></div>
+        <div class="pmet"><span>${ctr}%</span><em>Est. CTR</em></div>
+        <div class="pmet"><span>${(convRate*100).toFixed(1)}%</span><em>Conv. Rate</em></div>
+      </div>
+
+      <!-- Guidance -->
+      <div class="guidance-list">
+        <h4 class="guidance-title">Performance Guidance</h4>
+        ${tips.map(t => `
+          <div class="guidance-item ${t.type}">
+            <span class="g-icon">${t.icon}</span>
+            <div>
+              <strong>${t.title}</strong>
+              <p>${t.body}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+    </div>
+  `;
+}
+
+function buildGuidance({ budget, copy, audience, hasVisual, format, platform, goal, score }) {
+  const tips = [];
+
+  if (!hasVisual) tips.push({ type:'warn', icon:'🖼️', title:'Add Your Creative', body:'Uploading your actual ad visual allows for a much more accurate analysis. Ads with strong visuals get 38% higher CTR.' });
+
+  if (copy.length < 20) tips.push({ type:'warn', icon:'✍️', title:'Ad Copy Too Short', body:'Add your headline or caption. Strong copy directly impacts your Quality Score and CTR — platform algorithms reward relevance.' });
+  else if (copy.length > 0) {
+    const hasQuestion = copy.includes('?');
+    const hasNumber   = /\d/.test(copy);
+    const hasCTA      = /shop|buy|get|try|start|join|learn|discover|click|sign|free/i.test(copy);
+    if (!hasCTA)      tips.push({ type:'warn', icon:'📣', title:'Missing Call-to-Action', body:'Your copy doesn\'t have a clear CTA. Add words like "Shop Now", "Get Started", or "Claim Offer" to drive clicks.' });
+    if (hasQuestion)  tips.push({ type:'good', icon:'✅', title:'Great — You Used a Question', body:'Questions in ad copy increase engagement by up to 15% because they prompt viewers to self-identify.' });
+    if (hasNumber)    tips.push({ type:'good', icon:'✅', title:'Numbers in Copy — Nice', body:'Specific numbers (like "20% off" or "500+ customers") boost credibility and click-through rates.' });
+  }
+
+  if (!audience) tips.push({ type:'warn', icon:'🎯', title:'Define Your Audience', body:'A specific target audience description helps the algorithm deliver your ad to the right people, reducing wasted spend.' });
+
+  if (budget < 300 && platform === 'linkedin') tips.push({ type:'warn', icon:'💰', title:'Budget Low for LinkedIn', body:'LinkedIn has higher CPCs ($5–$8). We recommend at least $500/month to gather enough data to optimise.' });
+  if (budget < 200 && platform === 'google')   tips.push({ type:'warn', icon:'💰', title:'Budget Low for Google Search', body:'Google Search needs enough budget to gather conversion data. Consider $300+/month for meaningful results.' });
+
+  if (format === 'static' && platform === 'tiktok') tips.push({ type:'tip', icon:'💡', title:'Switch to Video for TikTok', body:'Static images underperform heavily on TikTok. Reels and short videos see 3–5x more reach on this platform.' });
+  if (format === 'reels')  tips.push({ type:'good', icon:'🚀', title:'Video Format — Smart Choice', body:'Video ads drive 30% more conversions than static on most platforms. You\'re set up for strong performance.' });
+  if (format === 'carousel') tips.push({ type:'good', icon:'✅', title:'Carousel = Higher Engagement', body:'Carousel ads let users swipe through multiple offers. Great for e-commerce and storytelling.' });
+
+  if (goal === 'awareness' && budget < 500) tips.push({ type:'tip', icon:'📊', title:'Awareness Needs Reach', body:'Brand awareness campaigns need volume. Allocate at least $500/month to build meaningful recall with your audience.' });
+  if (goal === 'leads')   tips.push({ type:'tip', icon:'📋', title:'Use Lead Gen Forms', body:'On Meta and LinkedIn, native Lead Gen Forms convert 2–3x better than landing page links — no page load friction.' });
+  if (goal === 'sales')   tips.push({ type:'tip', icon:'🛒', title:'Install Your Pixel First', body:'Make sure your Meta Pixel or Google Tag is installed on your site before spending. Retargeting lifts conversion rates by 10x.' });
+
+  if (score >= 80) tips.push({ type:'good', icon:'⭐', title:'Strong Setup — Ready to Scale', body:'Your campaign is well-configured. Consider A/B testing 2–3 ad variations and scaling your budget 20% per week on winners.' });
+
+  return tips.slice(0, 6);
+}
+
+function showPerfError(msg) {
+  document.getElementById('perfResults').innerHTML = `
+    <div class="result-placeholder"><div class="placeholder-icon">⚠️</div><p>${msg}</p></div>`;
+}
+
 // === AD VISUAL GENERATOR ===
 const adTemplates = {
   social: (biz, customer, offer) => [

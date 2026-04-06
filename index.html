@@ -19,6 +19,7 @@
         <li><a href="#strategy">Strategy</a></li>
         <li><a href="#budget">Budget</a></li>
         <li><a href="#visuals">Visuals</a></li>
+        <li><a href="#performance" class="nav-highlight">Performance Marketer</a></li>
         <li><a href="#integrate" class="btn btn-sm">Get Started</a></li>
       </ul>
       <button class="hamburger" onclick="toggleMenu()">&#9776;</button>
@@ -29,6 +30,7 @@
       <a href="#strategy">Strategy</a>
       <a href="#budget">Budget</a>
       <a href="#visuals">Visuals</a>
+      <a href="#performance">Performance Marketer</a>
       <a href="#integrate" class="btn btn-sm">Get Started</a>
     </div>
   </nav>
@@ -390,6 +392,103 @@
             <p>Your AI-generated ad copy and creative brief will appear here.</p>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERFORMANCE MARKETER -->
+  <section class="section perf-section" id="performance">
+    <div class="container">
+      <div class="section-header">
+        <div class="hero-badge" style="margin:0 auto 16px;">AI-Powered</div>
+        <h2>Performance <span class="grad-text">Marketer</span></h2>
+        <p>Upload your ad creative, enter your budget & platform — get a full performance prediction and expert guidance</p>
+      </div>
+
+      <div class="perf-wrap">
+
+        <!-- LEFT: INPUTS -->
+        <div class="perf-inputs">
+
+          <!-- Upload visual -->
+          <div class="perf-field">
+            <label>Upload Your Ad Creative</label>
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+              <input type="file" id="fileInput" accept="image/*,video/*" style="display:none" onchange="handleUpload(event)" />
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <div class="upload-icon">📤</div>
+                <p class="upload-text">Drop your image or video here</p>
+                <p class="upload-hint">JPG, PNG, MP4 · Max 20MB</p>
+              </div>
+              <img id="uploadPreview" class="upload-preview" style="display:none" />
+            </div>
+          </div>
+
+          <!-- Creative type -->
+          <div class="perf-field">
+            <label>Ad Format</label>
+            <div class="perf-pills" id="perfFormat">
+              <button class="pill active" data-val="static" onclick="selectPerfPill(this,'perfFormat')">Static Image</button>
+              <button class="pill" data-val="carousel" onclick="selectPerfPill(this,'perfFormat')">Carousel</button>
+              <button class="pill" data-val="reels" onclick="selectPerfPill(this,'perfFormat')">Reels / Video</button>
+              <button class="pill" data-val="story" onclick="selectPerfPill(this,'perfFormat')">Story</button>
+            </div>
+          </div>
+
+          <!-- Platform -->
+          <div class="perf-field">
+            <label>Platform</label>
+            <div class="perf-pills" id="perfPlatform">
+              <button class="pill active" data-val="meta" onclick="selectPerfPill(this,'perfPlatform')">Meta</button>
+              <button class="pill" data-val="google" onclick="selectPerfPill(this,'perfPlatform')">Google</button>
+              <button class="pill" data-val="tiktok" onclick="selectPerfPill(this,'perfPlatform')">TikTok</button>
+              <button class="pill" data-val="linkedin" onclick="selectPerfPill(this,'perfPlatform')">LinkedIn</button>
+              <button class="pill" data-val="youtube" onclick="selectPerfPill(this,'perfPlatform')">YouTube</button>
+            </div>
+          </div>
+
+          <div class="perf-row">
+            <div class="perf-field">
+              <label>Monthly Budget ($)</label>
+              <div class="input-prefix" style="--clr:var(--p1)">
+                <span style="color:var(--p1);font-weight:700;position:absolute;left:14px;top:50%;transform:translateY(-50%)">$</span>
+                <input type="number" id="perfBudget" placeholder="e.g. 500" min="50" class="perf-input" style="padding-left:28px" />
+              </div>
+            </div>
+            <div class="perf-field">
+              <label>Campaign Goal</label>
+              <select id="perfGoal" class="perf-input">
+                <option value="awareness">Brand Awareness</option>
+                <option value="leads" selected>Generate Leads</option>
+                <option value="sales">Drive Sales</option>
+                <option value="traffic">Website Traffic</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="perf-field">
+            <label>Your Ad Copy / Headline</label>
+            <textarea id="perfCopy" class="perf-textarea" placeholder="Paste your ad headline or caption here… e.g. 'Get 20% off your first order — limited time only!'"></textarea>
+          </div>
+
+          <div class="perf-field">
+            <label>Target Audience Description</label>
+            <input type="text" id="perfAudience" class="perf-input" placeholder="e.g. Women 25–40 interested in fitness and wellness" />
+          </div>
+
+          <button class="btn btn-primary btn-full perf-btn" onclick="analyzePerformance()">
+            ⚡ Predict My Performance
+          </button>
+        </div>
+
+        <!-- RIGHT: RESULTS -->
+        <div class="perf-results" id="perfResults">
+          <div class="result-placeholder">
+            <div class="placeholder-icon">⚡</div>
+            <p>Fill in your campaign details and click <strong>Predict My Performance</strong> to get your analysis.</p>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
