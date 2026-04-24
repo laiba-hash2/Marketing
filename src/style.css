@@ -255,6 +255,173 @@ body {
 .fill-medium { background: var(--yellow); }
 .fill-low { background: var(--green); }
 
+/* ── Team Activity (dashboard) ───────────────────── */
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background .1s;
+}
+.activity-row:last-child { border-bottom: none; }
+.activity-row:hover { background: var(--bg); }
+
+.activity-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.activity-name { font-weight: 600; font-size: 13px; }
+.activity-role { font-size: 11px; color: var(--text-muted); }
+
+.activity-tasks {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.act-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.act-chip--progress { background: var(--blue-light); color: #1d4ed8; }
+.act-chip--todo     { background: #f3f4f6; color: #374151; }
+
+.activity-badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Team Grid ───────────────────────────────────── */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.member-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: box-shadow .15s;
+}
+.member-card:hover { box-shadow: var(--shadow-lg); }
+
+.member-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.member-avatar {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.member-card-actions { display: flex; gap: 2px; }
+
+.member-card-body { display: flex; flex-direction: column; gap: 3px; }
+.member-name  { font-size: 16px; font-weight: 700; }
+.member-role  { font-size: 13px; color: var(--text-muted); }
+.member-email { font-size: 12px; color: var(--primary); }
+
+.member-card-stats {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.member-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+.member-stat:last-child { border-right: none; }
+
+.member-stat-value { font-size: 20px; font-weight: 700; line-height: 1; }
+.member-stat-label { font-size: 10px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-top: 3px; }
+
+.member-board-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: 13px;
+}
+
+/* ── Member Board ────────────────────────────────── */
+.member-board-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.board-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.board-stat-chip {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Color Picker ────────────────────────────────── */
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.color-swatch {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.active {
+  border-color: var(--text);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
 /* ── Filters Bar ─────────────────────────────────── */
 .filters-bar {
   display: flex;
@@ -441,7 +608,7 @@ body {
   box-shadow: var(--shadow-lg);
   animation: slideUp .2s ease;
 }
-.modal--sm { max-width: 380px; }
+.modal--sm { max-width: 400px; }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(12px); }
@@ -514,10 +681,15 @@ body {
 .toast.show { opacity: 1; transform: translateY(0); }
 
 /* ── Responsive ──────────────────────────────────── */
+@media (max-width: 1100px) {
+  .activity-badges { display: none; }
+}
+
 @media (max-width: 900px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .dashboard-grid { grid-template-columns: 1fr; }
   .kanban { grid-template-columns: repeat(2, 1fr); }
+  .activity-member { min-width: 140px; }
 }
 
 @media (max-width: 640px) {
@@ -526,4 +698,8 @@ body {
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .kanban { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
+  .team-grid { grid-template-columns: 1fr; }
+  .activity-row { flex-wrap: wrap; }
+  .activity-tasks { display: none; }
+  .member-board-identity { gap: 8px; }
 }
