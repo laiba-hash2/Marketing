@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="src/style.css" />
 </head>
 <body>
+
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-logo">
@@ -16,7 +17,20 @@
       </svg>
       <span>MarketCRM</span>
     </div>
+
+    <!-- Notification Bell -->
+    <div class="notif-bar" id="notifBar">
+      <button class="notif-btn" id="notifBellBtn" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-count" id="notifCount" style="display:none">0</span>
+      </button>
+    </div>
+
     <nav class="sidebar-nav">
+      <a href="#" class="nav-item" data-view="ceo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><path d="M17 11l2 2 4-4" stroke-width="2.2"/></svg>
+        CEO View
+      </a>
       <a href="#" class="nav-item active" data-view="dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
@@ -24,6 +38,10 @@
       <a href="#" class="nav-item" data-view="tasks">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         Tasks
+      </a>
+      <a href="#" class="nav-item" data-view="assets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Assets
       </a>
       <a href="#" class="nav-item" data-view="contacts">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
@@ -34,17 +52,83 @@
         Pipeline
       </a>
     </nav>
+
     <div class="sidebar-footer">
-      <div class="user-avatar">MT</div>
+      <div class="user-avatar" id="currentUserAvatar">MT</div>
       <div class="user-info">
-        <span class="user-name">Marketing Team</span>
-        <span class="user-role">Team Account</span>
+        <span class="user-name" id="currentUserName">Select User</span>
+        <span class="user-role" id="currentUserRole">Team Account</span>
       </div>
+      <button class="btn-icon switch-user-btn" id="switchUserBtn" title="Switch user">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+      </button>
     </div>
   </div>
 
   <!-- Main Content -->
   <main class="main">
+
+    <!-- CEO View -->
+    <section class="view" id="view-ceo">
+      <div class="page-header">
+        <div>
+          <h1>CEO Overview</h1>
+          <p class="subtitle">See what the team is working on and what's been delivered</p>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="ceo-stats-grid">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Ongoing Tasks -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <h2>Ongoing Tasks</h2>
+          <span class="badge badge-inprogress" id="ceo-ongoing-count">0</span>
+        </div>
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Assigned To</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Due Date</th>
+            </tr>
+          </thead>
+          <tbody id="ceo-ongoing-tbody"></tbody>
+        </table>
+        <div class="empty-state" id="ceo-ongoing-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg>
+          <p>No ongoing tasks right now.</p>
+        </div>
+      </div>
+
+      <!-- Completed Tasks -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Completed Tasks</h2>
+          <span class="badge badge-done" id="ceo-done-count">0</span>
+        </div>
+        <table class="task-table">
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Completed By</th>
+              <th>Deliverables</th>
+              <th>Completed</th>
+            </tr>
+          </thead>
+          <tbody id="ceo-done-tbody"></tbody>
+        </table>
+        <div class="empty-state" id="ceo-done-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <p>No completed tasks yet.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Dashboard View -->
     <section class="view active" id="view-dashboard">
       <div class="page-header">
@@ -148,6 +232,7 @@
               <th>Priority</th>
               <th>Status</th>
               <th>Due Date</th>
+              <th>Deliverables</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -157,6 +242,33 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
           <p>No tasks found. Create your first task!</p>
         </div>
+      </div>
+    </section>
+
+    <!-- Assets View -->
+    <section class="view" id="view-assets">
+      <div class="page-header">
+        <div>
+          <h1>Asset Library</h1>
+          <p class="subtitle">Upload and manage logos, banners, and brand files</p>
+        </div>
+        <button class="btn btn-primary" id="uploadAssetBtn">+ Upload Asset</button>
+      </div>
+
+      <div class="assets-search-bar">
+        <input type="text" class="search-input" id="assetSearch" placeholder="Search assets..."/>
+        <select class="filter-select" id="assetTypeFilter">
+          <option value="">All Types</option>
+          <option value="image">Images</option>
+          <option value="document">Documents</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <div class="assets-grid" id="assetsGrid"></div>
+      <div class="empty-state" id="assets-empty" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <p>No assets yet. Upload your first asset!</p>
       </div>
     </section>
 
@@ -202,6 +314,8 @@
       <div class="kanban" id="kanban-board"></div>
     </section>
   </main>
+
+  <!-- ══ MODALS ══════════════════════════════════════════════════ -->
 
   <!-- Task Modal -->
   <div class="modal-overlay" id="taskModal">
@@ -258,6 +372,104 @@
           <button type="submit" class="btn btn-primary" id="saveTask">Save Task</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Submit Work Modal -->
+  <div class="modal-overlay" id="submitWorkModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Submit Work</h2>
+        <button class="modal-close" id="closeSubmitModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="submit-task-name" id="submitTaskLabel"></div>
+
+        <div class="submit-tabs">
+          <button class="submit-tab active" data-tab="link">Post a Link</button>
+          <button class="submit-tab" data-tab="file">Upload File</button>
+        </div>
+
+        <!-- Link tab -->
+        <div class="submit-tab-pane active" id="tab-link">
+          <div class="form-group">
+            <label>URL / Link</label>
+            <input type="url" id="submitUrl" placeholder="https://drive.google.com/..."/>
+          </div>
+          <div class="form-group">
+            <label>Link Label</label>
+            <input type="text" id="submitUrlLabel" placeholder="e.g. Final Design File"/>
+          </div>
+        </div>
+
+        <!-- File tab -->
+        <div class="submit-tab-pane" id="tab-file">
+          <div class="upload-drop-zone" id="workDropZone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>Drag & drop or <label class="upload-link" for="workFileInput">browse</label></p>
+            <p class="upload-hint">Max 2 MB per file</p>
+            <input type="file" id="workFileInput" style="display:none"/>
+          </div>
+          <div id="workFilePreview" style="display:none" class="file-preview-row">
+            <span id="workFileName"></span>
+            <button class="btn-icon" id="clearWorkFile" title="Remove">&times;</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px">
+          <label>Note (optional)</label>
+          <textarea id="submitNote" rows="2" placeholder="Any comments about this deliverable..."></textarea>
+        </div>
+
+        <!-- Notify section -->
+        <div class="notify-section">
+          <label class="notify-label">
+            <input type="checkbox" id="notifyOnSubmit"/> Notify team members after submitting
+          </label>
+          <div id="notifyRecipientsList" style="display:none" class="notify-recipients">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelSubmit">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmSubmit">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Asset Modal -->
+  <div class="modal-overlay" id="assetUploadModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Upload Asset</h2>
+        <button class="modal-close" id="closeAssetModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-drop-zone" id="assetDropZone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>Drag & drop or <label class="upload-link" for="assetFileInput">browse</label></p>
+          <p class="upload-hint">Images, PDFs, docs — max 2 MB</p>
+          <input type="file" id="assetFileInput" style="display:none" accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.zip"/>
+        </div>
+        <div id="assetFilePreview" style="display:none" class="file-preview-row">
+          <span id="assetFileName"></span>
+          <button class="btn-icon" id="clearAssetFile" title="Remove">&times;</button>
+        </div>
+        <div class="form-group" style="margin-top:14px">
+          <label>Asset Name <span class="required">*</span></label>
+          <input type="text" id="assetName" placeholder="e.g. Company Logo 2026"/>
+        </div>
+        <div class="form-group">
+          <label>Tags</label>
+          <input type="text" id="assetTags" placeholder="e.g. logo, brand, q2 (comma separated)"/>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelAsset">Cancel</button>
+          <button type="button" class="btn btn-primary" id="confirmAssetUpload">Upload</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -328,6 +540,30 @@
       </div>
     </div>
   </div>
+
+  <!-- User Switcher Modal -->
+  <div class="modal-overlay" id="userModal">
+    <div class="modal modal--sm">
+      <div class="modal-header">
+        <h2>Switch User</h2>
+        <button class="modal-close" id="closeUserModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-muted);margin-bottom:14px;font-size:13px">Select who you are to personalise your experience.</p>
+        <div class="user-list" id="userList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Panel -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <span>Notifications</span>
+      <button class="btn-text" id="markAllReadBtn">Mark all read</button>
+    </div>
+    <div class="notif-panel-body" id="notifPanelBody"></div>
+  </div>
+  <div class="notif-backdrop" id="notifBackdrop"></div>
 
   <div class="toast" id="toast"></div>
 
