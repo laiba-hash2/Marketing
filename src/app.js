@@ -331,7 +331,7 @@ function renderDashboard() {
   const container = document.getElementById('recent-tasks');
   const recent = tasks.slice(0, 6);
   if (!recent.length) {
-    container.innerHTML = '<div class="empty-state" style="padding:30px"><p>No tasks yet.</p></div>';
+    container.innerHTML = '<div class="empty-state" style="padding:30px"><p>No tasks yet. Click "+ New Task" to create one.</p></div>';
   } else {
     container.innerHTML = recent.map(t => `
       <div class="task-item">

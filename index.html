@@ -187,7 +187,7 @@
           <div class="task-list" id="recent-tasks"></div>
         </div>
         <div class="card">
-          <div class="card-header"><h2>By Priority</h2></div>
+          <div class="card-header"><h2>Tasks by Priority</h2></div>
           <div class="priority-chart" id="priority-chart"></div>
         </div>
       </div>
@@ -277,7 +277,7 @@
       <div class="page-header">
         <div>
           <h1>Contacts</h1>
-          <p class="subtitle">Manage clients and leads</p>
+          <p class="subtitle">Manage clients, leads, and prospects</p>
         </div>
         <button class="btn btn-primary" id="contactsAddContact">+ New Contact</button>
       </div>
@@ -289,7 +289,7 @@
               <th>Company</th>
               <th>Email</th>
               <th>Phone</th>
-              <th>Stage</th>
+              <th>Sales Stage</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -307,7 +307,7 @@
       <div class="page-header">
         <div>
           <h1>Pipeline</h1>
-          <p class="subtitle">Track tasks by stage</p>
+          <p class="subtitle">View and manage tasks by workflow status</p>
         </div>
         <button class="btn btn-primary" id="pipelineAddTask">+ New Task</button>
       </div>
@@ -424,7 +424,7 @@
         <!-- Notify section -->
         <div class="notify-section">
           <label class="notify-label">
-            <input type="checkbox" id="notifyOnSubmit"/> Notify team members after submitting
+            <input type="checkbox" id="notifyOnSubmit"/> Notify specific team members after submitting
           </label>
           <div id="notifyRecipientsList" style="display:none" class="notify-recipients">
             <!-- filled by JS -->
