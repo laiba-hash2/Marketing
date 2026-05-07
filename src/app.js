@@ -1,15 +1,43 @@
-/* ── State ─────────────────────────────────────────────── */
+/* ── API Config ─────────────────────────────────────────────
+   For local dev: keep as http://localhost:3001/api
+   After deploying backend to Render/Railway, replace with
+   your deployed URL e.g. https://your-app.onrender.com/api
+   ─────────────────────────────────────────────────────────── */
+const API_BASE = 'http://localhost:3001/api';
+
+/* ── In-memory State ────────────────────────────────────────── */
+const state = {
+  tasks: [],
+  contacts: [],
+  assets: [],
+  notifications: [],
+  currentUser: localStorage.getItem('crm_user') || 'CEO',
+};
+
+/* ── API Helpers ─────────────────────────────────────────────── */
+async function apiFetch(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body !== null) opts.body = JSON.stringify(body);
+  const res = await fetch(API_BASE + path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+const api = {
+  get:    path       => apiFetch(path),
+  post:   (path, b)  => apiFetch(path, 'POST',   b),
+  put:    (path, b)  => apiFetch(path, 'PUT',    b),
+  patch:  (path, b)  => apiFetch(path, 'PATCH',  b),
+  delete: path       => apiFetch(path, 'DELETE'),
+};
+
+/* ── DB (reads from in-memory state, synchronous) ────────────── */
 const DB = {
-  get tasks()    { return JSON.parse(localStorage.getItem('crm_tasks')    || '[]'); },
-  set tasks(v)   { localStorage.setItem('crm_tasks',    JSON.stringify(v)); },
-  get contacts() { return JSON.parse(localStorage.getItem('crm_contacts') || '[]'); },
-  set contacts(v){ localStorage.setItem('crm_contacts', JSON.stringify(v)); },
-  get assets()   { return JSON.parse(localStorage.getItem('crm_assets')   || '[]'); },
-  set assets(v)  { localStorage.setItem('crm_assets',   JSON.stringify(v)); },
-  get notifications() { return JSON.parse(localStorage.getItem('crm_notifs') || '[]'); },
-  set notifications(v){ localStorage.setItem('crm_notifs', JSON.stringify(v)); },
-  get currentUser()   { return localStorage.getItem('crm_user') || 'CEO'; },
-  set currentUser(v)  { localStorage.setItem('crm_user', v); },
+  get tasks()         { return state.tasks; },
+  get contacts()      { return state.contacts; },
+  get assets()        { return state.assets; },
+  get notifications() { return state.notifications; },
+  get currentUser()   { return state.currentUser; },
+  set currentUser(v)  { state.currentUser = v; localStorage.setItem('crm_user', v); },
 };
 
 const USERS = ['CEO', 'Sarah Kim', 'Tom Rivera', 'Aisha Patel'];
@@ -18,14 +46,14 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-/* ── XSS Guard ─────────────────────────────────────────── */
+/* ── XSS Guard ───────────────────────────────────────────────── */
 function escHtml(str) {
   return String(str || '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-/* ── Toast ─────────────────────────────────────────────── */
+/* ── Toast ───────────────────────────────────────────────────── */
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -33,7 +61,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-/* ── Modals ────────────────────────────────────────────── */
+/* ── Modals ──────────────────────────────────────────────────── */
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -43,7 +71,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   });
 });
 
-/* ── Navigation ────────────────────────────────────────── */
+/* ── Navigation ──────────────────────────────────────────────── */
 function navigate(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(a => a.classList.remove('active'));
@@ -70,7 +98,7 @@ document.querySelectorAll('[data-view]').forEach(el => {
   }
 });
 
-/* ── User Switcher ─────────────────────────────────────── */
+/* ── User Switcher ───────────────────────────────────────────── */
 function renderUserSwitcher() {
   const u = DB.currentUser;
   document.getElementById('currentUserName').textContent = u;
@@ -105,7 +133,7 @@ document.getElementById('switchUserBtn').addEventListener('click', () => {
 
 document.getElementById('closeUserModal').addEventListener('click', () => closeModal('userModal'));
 
-/* ── Notifications ─────────────────────────────────────── */
+/* ── Notifications ───────────────────────────────────────────── */
 function renderNotifCount() {
   const unread = DB.notifications.filter(n => n.to === DB.currentUser && !n.read).length;
   const badge = document.getElementById('notifCount');
@@ -135,10 +163,12 @@ function renderNotifPanel() {
     </div>
   `).join('');
   body.querySelectorAll('.notif-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const all = DB.notifications;
-      const idx = all.findIndex(n => n.id === el.dataset.id);
-      if (idx > -1) { all[idx].read = true; DB.notifications = all; }
+    el.addEventListener('click', async () => {
+      try {
+        await api.patch('/notifications/' + el.dataset.id + '/read', {});
+        const idx = state.notifications.findIndex(n => n.id === el.dataset.id);
+        if (idx > -1) state.notifications[idx].read = true;
+      } catch (e) { console.error(e); }
       renderNotifPanel();
       renderNotifCount();
     });
@@ -156,19 +186,26 @@ document.getElementById('notifBackdrop').addEventListener('click', () => {
   document.getElementById('notifBackdrop').classList.remove('open');
 });
 
-document.getElementById('markAllReadBtn').addEventListener('click', () => {
-  const all = DB.notifications.map(n => n.to === DB.currentUser ? { ...n, read: true } : n);
-  DB.notifications = all;
+document.getElementById('markAllReadBtn').addEventListener('click', async () => {
+  try {
+    await api.patch('/notifications/read-all', { user: DB.currentUser });
+    state.notifications = state.notifications.map(n =>
+      n.to === DB.currentUser ? { ...n, read: true } : n
+    );
+  } catch (e) { console.error(e); }
   renderNotifPanel();
   renderNotifCount();
 });
 
-function sendNotifications(recipients, message, taskName) {
-  const all = DB.notifications;
-  recipients.forEach(to => {
-    all.unshift({ id: uid(), from: DB.currentUser, to, message, taskName, read: false, createdAt: new Date().toISOString() });
-  });
-  DB.notifications = all;
+async function sendNotifications(recipients, message, taskName) {
+  const newNotifs = recipients.map(to => ({
+    id: uid(), from: DB.currentUser, to, message, taskName,
+    read: false, createdAt: new Date().toISOString()
+  }));
+  try {
+    await Promise.all(newNotifs.map(n => api.post('/notifications', n)));
+    state.notifications.unshift(...newNotifs);
+  } catch (e) { console.error(e); }
   renderNotifCount();
 }
 
@@ -182,7 +219,7 @@ function timeAgo(iso) {
   return Math.floor(h / 24) + 'd ago';
 }
 
-/* ── Helpers ───────────────────────────────────────────── */
+/* ── Helpers ─────────────────────────────────────────────────── */
 function priorityBadge(p) {
   const map = { High: 'badge-high', Medium: 'badge-medium', Low: 'badge-low' };
   return `<span class="badge ${map[p] || ''}">${p}</span>`;
@@ -224,13 +261,12 @@ function refreshCurrentView() {
   if (id === 'assets')    renderAssets();
 }
 
-/* ── CEO View ──────────────────────────────────────────── */
+/* ── CEO View ────────────────────────────────────────────────── */
 function renderCEOView() {
   const tasks    = DB.tasks;
   const ongoing  = tasks.filter(t => t.status !== 'Done');
   const done     = tasks.filter(t => t.status === 'Done');
 
-  // Stats
   const today = new Date(); today.setHours(0,0,0,0);
   const statsGrid = document.getElementById('ceo-stats-grid');
   statsGrid.innerHTML = `
@@ -252,7 +288,6 @@ function renderCEOView() {
     </div>
   `;
 
-  // Ongoing
   document.getElementById('ceo-ongoing-count').textContent = ongoing.length;
   const ongoingTbody = document.getElementById('ceo-ongoing-tbody');
   const ongoingEmpty = document.getElementById('ceo-ongoing-empty');
@@ -280,7 +315,6 @@ function renderCEOView() {
     `).join('');
   }
 
-  // Completed
   document.getElementById('ceo-done-count').textContent = done.length;
   const doneTbody = document.getElementById('ceo-done-tbody');
   const doneEmpty = document.getElementById('ceo-done-empty');
@@ -314,7 +348,7 @@ function renderCEOView() {
   }
 }
 
-/* ── Dashboard ─────────────────────────────────────────── */
+/* ── Dashboard ───────────────────────────────────────────────── */
 function renderDashboard() {
   const tasks   = DB.tasks;
   const today   = new Date(); today.setHours(0,0,0,0);
@@ -366,17 +400,16 @@ function renderDashboard() {
   }).join('');
 }
 
-function toggleTaskDone(id) {
-  const tasks = DB.tasks;
-  const t = tasks.find(t => t.id === id);
+async function toggleTaskDone(id) {
+  const t = state.tasks.find(t => t.id === id);
   if (!t) return;
   t.status = t.status === 'Done' ? 'Todo' : 'Done';
   if (t.status === 'Done') t.completedAt = new Date().toISOString();
-  DB.tasks = tasks;
+  try { await api.put('/tasks/' + id, t); } catch (e) { console.error(e); }
   refreshCurrentView();
 }
 
-/* ── Task Modal ────────────────────────────────────────── */
+/* ── Task Modal ──────────────────────────────────────────────── */
 function resetTaskForm() {
   document.getElementById('taskId').value = '';
   document.getElementById('taskName').value = '';
@@ -411,11 +444,11 @@ document.getElementById('dashAddTask').addEventListener('click',    () => openTa
 document.getElementById('tasksAddTask').addEventListener('click',   () => openTaskModal());
 document.getElementById('pipelineAddTask').addEventListener('click',() => openTaskModal());
 
-document.getElementById('taskForm').addEventListener('submit', e => {
+document.getElementById('taskForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const id      = document.getElementById('taskId').value;
-  const name    = document.getElementById('taskName').value.trim();
-  const assignee= document.getElementById('taskAssignee').value.trim();
+  const id       = document.getElementById('taskId').value;
+  const name     = document.getElementById('taskName').value.trim();
+  const assignee = document.getElementById('taskAssignee').value.trim();
   if (!name || !assignee) return;
 
   const task = {
@@ -429,29 +462,33 @@ document.getElementById('taskForm').addEventListener('submit', e => {
     tags:     document.getElementById('taskTags').value.split(',').map(t => t.trim()).filter(Boolean),
     createdAt: id ? undefined : new Date().toISOString(),
   };
-
   if (task.status === 'Done' && !task.completedAt) task.completedAt = new Date().toISOString();
 
-  const tasks = DB.tasks;
-  if (id) {
-    const idx = tasks.findIndex(t => t.id === id);
-    if (idx > -1) {
-      task.createdAt   = tasks[idx].createdAt;
-      task.submissions = tasks[idx].submissions || [];
-      task.completedAt = tasks[idx].completedAt || task.completedAt;
-      tasks[idx] = task;
+  try {
+    if (id) {
+      const idx = state.tasks.findIndex(t => t.id === id);
+      if (idx > -1) {
+        task.createdAt   = state.tasks[idx].createdAt;
+        task.submissions = state.tasks[idx].submissions || [];
+        task.completedAt = state.tasks[idx].completedAt || task.completedAt;
+        const updated = await api.put('/tasks/' + id, task);
+        state.tasks[idx] = updated;
+      }
+      showToast('Task updated');
+    } else {
+      const created = await api.post('/tasks', task);
+      state.tasks.unshift(created);
+      showToast('Task created');
     }
-    showToast('Task updated');
-  } else {
-    tasks.unshift(task);
-    showToast('Task created');
+  } catch (e) {
+    console.error(e);
+    showToast('Error saving task');
   }
-  DB.tasks = tasks;
   closeModal('taskModal');
   refreshCurrentView();
 });
 
-/* ── Tasks Table ───────────────────────────────────────── */
+/* ── Tasks Table ─────────────────────────────────────────────── */
 function renderTasksTable() {
   const search    = (document.getElementById('taskSearch').value   || '').toLowerCase();
   const fStatus   = document.getElementById('filterStatus').value  || '';
@@ -511,7 +548,7 @@ function renderTasksTable() {
             <button class="btn-icon" title="Edit" onclick="openTaskModal(DB.tasks.find(t=>t.id==='${t.id}'))">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
-            <button class="btn-icon" title="Delete" style="color:var(--red)" onclick="confirmDelete('task','${t.id}','${escHtml(t.name).replace(/'/g,"\\'")}')">
+            <button class="btn-icon" title="Delete" style="color:var(--red)" onclick="confirmDelete('task','${t.id}','${escHtml(t.name).replace(/'/g,\"\\'\")}')">  
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
             </button>
           </div>
@@ -525,7 +562,7 @@ function renderTasksTable() {
   document.getElementById(id).addEventListener('input', renderTasksTable);
 });
 
-/* ── Submit Work ───────────────────────────────────────── */
+/* ── Submit Work ─────────────────────────────────────────────── */
 let submitWorkTaskId = null;
 let workFileData = null;
 
@@ -542,7 +579,6 @@ function openSubmitWork(taskId) {
   document.getElementById('notifyOnSubmit').checked = false;
   document.getElementById('notifyRecipientsList').style.display = 'none';
 
-  // Build recipients list (all users except current)
   const recipients = USERS.filter(u => u !== DB.currentUser);
   document.getElementById('notifyRecipientsList').innerHTML = recipients.map(u => `
     <label class="recipient-label">
@@ -552,7 +588,6 @@ function openSubmitWork(taskId) {
     </label>
   `).join('');
 
-  // Switch to link tab by default
   switchSubmitTab('link');
   openModal('submitWorkModal');
 }
@@ -573,7 +608,6 @@ document.getElementById('notifyOnSubmit').addEventListener('change', function() 
 document.getElementById('closeSubmitModal').addEventListener('click', () => closeModal('submitWorkModal'));
 document.getElementById('cancelSubmit').addEventListener('click',     () => closeModal('submitWorkModal'));
 
-// File handling for work submission
 document.getElementById('workFileInput').addEventListener('change', function() {
   handleWorkFile(this.files[0]);
 });
@@ -609,7 +643,7 @@ function handleWorkFile(file) {
   reader.readAsDataURL(file);
 }
 
-document.getElementById('confirmSubmit').addEventListener('click', () => {
+document.getElementById('confirmSubmit').addEventListener('click', async () => {
   if (!submitWorkTaskId) return;
   const activeTab = document.querySelector('.submit-tab.active').dataset.tab;
   const note = document.getElementById('submitNote').value.trim();
@@ -624,21 +658,22 @@ document.getElementById('confirmSubmit').addEventListener('click', () => {
     submission = { id: uid(), type: 'file', name: workFileData.name, size: workFileData.size, fileType: workFileData.type, data: workFileData.data, note, uploadedAt: new Date().toISOString() };
   }
 
-  const tasks = DB.tasks;
-  const idx = tasks.findIndex(t => t.id === submitWorkTaskId);
+  const idx = state.tasks.findIndex(t => t.id === submitWorkTaskId);
   if (idx > -1) {
-    if (!tasks[idx].submissions) tasks[idx].submissions = [];
-    tasks[idx].submissions.push(submission);
-    if (tasks[idx].status !== 'Done') { tasks[idx].status = 'Done'; tasks[idx].completedAt = new Date().toISOString(); }
-    DB.tasks = tasks;
+    if (!state.tasks[idx].submissions) state.tasks[idx].submissions = [];
+    state.tasks[idx].submissions.push(submission);
+    if (state.tasks[idx].status !== 'Done') {
+      state.tasks[idx].status = 'Done';
+      state.tasks[idx].completedAt = new Date().toISOString();
+    }
+    try { await api.put('/tasks/' + submitWorkTaskId, state.tasks[idx]); } catch (e) { console.error(e); }
   }
 
-  // Send notifications if checked
   if (document.getElementById('notifyOnSubmit').checked) {
     const checked = [...document.querySelectorAll('.notif-recipient:checked')].map(c => c.value);
     if (checked.length) {
-      const taskName = tasks[idx] ? tasks[idx].name : '';
-      sendNotifications(checked, `${DB.currentUser} submitted work on "${taskName}"`, taskName);
+      const taskName = state.tasks[idx] ? state.tasks[idx].name : '';
+      await sendNotifications(checked, `${DB.currentUser} submitted work on "${taskName}"`, taskName);
     }
   }
 
@@ -647,7 +682,7 @@ document.getElementById('confirmSubmit').addEventListener('click', () => {
   refreshCurrentView();
 });
 
-/* ── Assets ────────────────────────────────────────────── */
+/* ── Assets ──────────────────────────────────────────────────── */
 let pendingAssetFile = null;
 
 document.getElementById('uploadAssetBtn').addEventListener('click', () => {
@@ -700,15 +735,14 @@ function handleAssetFile(file) {
   reader.readAsDataURL(file);
 }
 
-document.getElementById('confirmAssetUpload').addEventListener('click', () => {
+document.getElementById('confirmAssetUpload').addEventListener('click', async () => {
   if (!pendingAssetFile) { showToast('Please select a file'); return; }
   const name = document.getElementById('assetName').value.trim();
   if (!name) { showToast('Please enter an asset name'); return; }
 
   const isImage = pendingAssetFile.mimeType.startsWith('image/');
   const asset = {
-    id: uid(),
-    name,
+    id: uid(), name,
     tags: document.getElementById('assetTags').value.split(',').map(t=>t.trim()).filter(Boolean),
     fileName: pendingAssetFile.name,
     size: pendingAssetFile.size,
@@ -719,17 +753,20 @@ document.getElementById('confirmAssetUpload').addEventListener('click', () => {
     uploadedAt: new Date().toISOString(),
   };
 
-  const assets = DB.assets;
-  assets.unshift(asset);
-  DB.assets = assets;
-
-  showToast('Asset uploaded!');
+  try {
+    const created = await api.post('/assets', asset);
+    state.assets.unshift(created);
+    showToast('Asset uploaded!');
+  } catch (e) {
+    console.error(e);
+    showToast('Error uploading asset');
+  }
   closeModal('assetUploadModal');
   renderAssets();
 });
 
 function renderAssets() {
-  const search   = (document.getElementById('assetSearch').value || '').toLowerCase();
+  const search     = (document.getElementById('assetSearch').value || '').toLowerCase();
   const typeFilter = document.getElementById('assetTypeFilter').value;
 
   let assets = DB.assets;
@@ -776,9 +813,15 @@ function fileIcon(mime) {
   return '📄';
 }
 
-function deleteAsset(id) {
-  DB.assets = DB.assets.filter(a => a.id !== id);
-  showToast('Asset deleted');
+async function deleteAsset(id) {
+  try {
+    await api.delete('/assets/' + id);
+    state.assets = state.assets.filter(a => a.id !== id);
+    showToast('Asset deleted');
+  } catch (e) {
+    console.error(e);
+    showToast('Error deleting asset');
+  }
   renderAssets();
 }
 
@@ -786,7 +829,7 @@ function deleteAsset(id) {
   document.getElementById(id).addEventListener('input', renderAssets);
 });
 
-/* ── Contacts ──────────────────────────────────────────── */
+/* ── Contacts ────────────────────────────────────────────────── */
 function resetContactForm() {
   document.getElementById('contactId').value = '';
   document.getElementById('contactName').value = '';
@@ -817,7 +860,7 @@ document.getElementById('closeContactModal').addEventListener('click', () => clo
 document.getElementById('cancelContact').addEventListener('click',     () => closeModal('contactModal'));
 document.getElementById('contactsAddContact').addEventListener('click', () => openContactModal());
 
-document.getElementById('contactForm').addEventListener('submit', e => {
+document.getElementById('contactForm').addEventListener('submit', async e => {
   e.preventDefault();
   const id   = document.getElementById('contactId').value;
   const name = document.getElementById('contactName').value.trim();
@@ -833,16 +876,24 @@ document.getElementById('contactForm').addEventListener('submit', e => {
     createdAt: id ? undefined : new Date().toISOString(),
   };
 
-  const contacts = DB.contacts;
-  if (id) {
-    const idx = contacts.findIndex(c => c.id === id);
-    if (idx > -1) { contact.createdAt = contacts[idx].createdAt; contacts[idx] = contact; }
-    showToast('Contact updated');
-  } else {
-    contacts.unshift(contact);
-    showToast('Contact added');
+  try {
+    if (id) {
+      const idx = state.contacts.findIndex(c => c.id === id);
+      if (idx > -1) {
+        contact.createdAt = state.contacts[idx].createdAt;
+        const updated = await api.put('/contacts/' + id, contact);
+        state.contacts[idx] = updated;
+      }
+      showToast('Contact updated');
+    } else {
+      const created = await api.post('/contacts', contact);
+      state.contacts.unshift(created);
+      showToast('Contact added');
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('Error saving contact');
   }
-  DB.contacts = contacts;
   closeModal('contactModal');
   renderContacts();
 });
@@ -872,7 +923,7 @@ function renderContacts() {
           <button class="btn-icon" onclick="openContactModal(DB.contacts.find(c=>c.id==='${c.id}'))">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
-          <button class="btn-icon" style="color:var(--red)" onclick="confirmDelete('contact','${c.id}','${escHtml(c.name).replace(/'/g,"\\'")}')">
+          <button class="btn-icon" style="color:var(--red)" onclick="confirmDelete('contact','${c.id}','${escHtml(c.name).replace(/'/g,\"\\'\"")}')">  
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
           </button>
         </div>
@@ -881,7 +932,7 @@ function renderContacts() {
   `).join('');
 }
 
-/* ── Delete ────────────────────────────────────────────── */
+/* ── Delete ──────────────────────────────────────────────────── */
 let pendingDelete = null;
 
 function confirmDelete(type, id, label) {
@@ -893,23 +944,30 @@ function confirmDelete(type, id, label) {
 document.getElementById('closeDeleteModal').addEventListener('click', () => closeModal('deleteModal'));
 document.getElementById('cancelDelete').addEventListener('click',     () => closeModal('deleteModal'));
 
-document.getElementById('confirmDelete').addEventListener('click', () => {
+document.getElementById('confirmDelete').addEventListener('click', async () => {
   if (!pendingDelete) return;
   const { type, id } = pendingDelete;
-  if (type === 'task') {
-    DB.tasks = DB.tasks.filter(t => t.id !== id);
-    showToast('Task deleted');
-    refreshCurrentView();
-  } else if (type === 'contact') {
-    DB.contacts = DB.contacts.filter(c => c.id !== id);
-    showToast('Contact deleted');
-    renderContacts();
+  try {
+    if (type === 'task') {
+      await api.delete('/tasks/' + id);
+      state.tasks = state.tasks.filter(t => t.id !== id);
+      showToast('Task deleted');
+      refreshCurrentView();
+    } else if (type === 'contact') {
+      await api.delete('/contacts/' + id);
+      state.contacts = state.contacts.filter(c => c.id !== id);
+      showToast('Contact deleted');
+      renderContacts();
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('Error deleting item');
   }
   pendingDelete = null;
   closeModal('deleteModal');
 });
 
-/* ── Pipeline ──────────────────────────────────────────── */
+/* ── Pipeline ────────────────────────────────────────────────── */
 function renderPipeline() {
   const statuses = ['Todo', 'In Progress', 'Review', 'Done'];
   const tasks    = DB.tasks;
@@ -943,29 +1001,35 @@ function renderPipeline() {
   }).join('');
 }
 
-/* ── Seed Demo Data ────────────────────────────────────── */
-function seedIfEmpty() {
-  if (DB.tasks.length) return;
-  const today = new Date();
-  const d = n => { const x = new Date(today); x.setDate(x.getDate()+n); return x.toISOString().split('T')[0]; };
-  DB.tasks = [
-    { id: uid(), name: 'Launch Q2 Email Campaign',    assignee: 'Sarah Kim',   priority: 'High',   status: 'In Progress', due: d(2),  tags: ['email','q2'],     desc: 'Set up drip campaign for Q2 product launch.', createdAt: new Date().toISOString(), submissions: [] },
-    { id: uid(), name: 'Design Social Media Banners', assignee: 'Tom Rivera',  priority: 'Medium', status: 'Todo',        due: d(5),  tags: ['design','social'], desc: 'Create banner assets for Instagram and LinkedIn.', createdAt: new Date().toISOString(), submissions: [] },
-    { id: uid(), name: 'Update Landing Page Copy',    assignee: 'Aisha Patel', priority: 'High',   status: 'Review',      due: d(-1), tags: ['copy','web'],      desc: 'Refresh homepage headline and sub-copy.', createdAt: new Date().toISOString(), submissions: [] },
-    { id: uid(), name: 'Competitor Analysis Report',  assignee: 'Sarah Kim',   priority: 'Medium', status: 'Done',        due: d(-3), tags: ['research'],        desc: 'Quarterly competitive landscape overview.', createdAt: new Date().toISOString(), completedAt: new Date().toISOString(), submissions: [] },
-    { id: uid(), name: 'Plan Webinar for May',        assignee: 'Tom Rivera',  priority: 'Low',    status: 'Todo',        due: d(14), tags: ['events','webinar'],desc: 'Coordinate speakers and registration page.', createdAt: new Date().toISOString(), submissions: [] },
-    { id: uid(), name: 'A/B Test Ad Copy',            assignee: 'Aisha Patel', priority: 'Medium', status: 'In Progress', due: d(7),  tags: ['ads','testing'],   desc: 'Run two variants on Google Ads.', createdAt: new Date().toISOString(), submissions: [] },
-  ];
-  DB.contacts = [
-    { id: uid(), name: 'James Carter',  company: 'TechFlow Inc.',   email: 'james@techflow.io',    phone: '+1 555-0101', stage: 'Customer',  notes: 'Key account, renews in Sept.', createdAt: new Date().toISOString() },
-    { id: uid(), name: 'Priya Mehta',   company: 'BrightSpark Co.', email: 'priya@brightspark.co', phone: '+1 555-0202', stage: 'Prospect',  notes: 'Interested in premium plan.', createdAt: new Date().toISOString() },
-    { id: uid(), name: 'Carlos Diaz',   company: 'NovaBrand',       email: 'c.diaz@novabrand.com', phone: '+1 555-0303', stage: 'Lead',      notes: 'Met at MarketConf 2026.', createdAt: new Date().toISOString() },
-    { id: uid(), name: 'Emma Wilson',   company: 'GrowthLab',       email: 'emma@growthlab.io',    phone: '+1 555-0404', stage: 'Qualified', notes: 'Requested proposal for Q3.', createdAt: new Date().toISOString() },
-  ];
+/* ── Init ────────────────────────────────────────────────────── */
+async function init() {
+  try {
+    const [tasks, contacts, assets, notifications] = await Promise.all([
+      api.get('/tasks'),
+      api.get('/contacts'),
+      api.get('/assets'),
+      api.get('/notifications'),
+    ]);
+    state.tasks         = tasks;
+    state.contacts      = contacts;
+    state.assets        = assets;
+    state.notifications = notifications;
+
+    if (!state.tasks.length) {
+      await api.post('/seed', {});
+      const seeded = await api.get('/tasks');
+      const seededContacts = await api.get('/contacts');
+      state.tasks    = seeded;
+      state.contacts = seededContacts;
+    }
+  } catch (err) {
+    console.error('Failed to connect to backend:', err);
+    showToast('Cannot reach server — is the backend running?');
+  }
+
+  renderUserSwitcher();
+  renderNotifCount();
+  navigate('dashboard');
 }
 
-/* ── Init ──────────────────────────────────────────────── */
-seedIfEmpty();
-renderUserSwitcher();
-renderNotifCount();
-navigate('dashboard');
+init();
